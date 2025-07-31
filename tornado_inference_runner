@@ -40,7 +40,7 @@ class TornadoFeatureExtractor:
         self.model_dir = model_dir
         self.tornado_path = tornado_path
         self.mode = mode
-        self.inference_engine = TornadoVMInferenceEngine(model_dir)
+        self.inference_engine = TornadoVMInferenceEngine(model_dir, mode)
 
     def run_tornado_with_features(self, truffle_args, example_class, input_size, features_json_file) -> Optional[int]:
         """

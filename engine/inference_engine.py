@@ -29,19 +29,50 @@ class TornadoVMInferenceEngine:
         else:
             classifier_dir = self.model_dir
 
-        # Load the three trained classifiers
-        try:
+        if self.mode == "energy":
+            # Load the six trained classifiers
+            self.classifier_1 = joblib.load(f"{classifier_dir}/clf1_energy_etc.pkl")
+            self.classifier_2 = joblib.load(f"{classifier_dir}/clf2_energy_etc.pkl")
+            self.classifier_3 = joblib.load(f"{classifier_dir}/clf3_energy_etc.pkl")
+            self.classifier_4 = joblib.load(f"{classifier_dir}/clf4_energy_etc.pkl")
+            self.classifier_5 = joblib.load(f"{classifier_dir}/clf5_energy_etc.pkl")
+            self.classifier_6 = joblib.load(f"{classifier_dir}/clf6_energy_etc.pkl")
+
+            # Power mode thresholds (from test results)
+            self.thresholds = {
+                "igpu_cpu": 0.0,      # clf1: regression threshold
+                "gpu_cpu": 0.4,       # clf2: classification threshold
+                "gpu_igpu": 0.67,     # clf3: classification threshold
+                "java_cpu": 0.5,      # clf4: classification threshold
+                "java_gpu": 0.5,      # clf5: classification threshold
+                "java_igpu": 0.5      # clf6: classification threshold
+            }
+        else:
+            # Load the three trained classifiers
+            print("Using the performance classifiers")
             self.classifier_1 = joblib.load(f"{classifier_dir}/IGPUvsCPU_final.joblib")
             self.classifier_2 = joblib.load(f"{classifier_dir}/GPUvsCPU_final.joblib")
             self.classifier_3 = joblib.load(f"{classifier_dir}/GPUvsIGPU_final.joblib")
-        except FileNotFoundError as e:
-            print(f"❌ Could not find model file: {e}")
-            raise
-        
+
+            # Performance mode thresholds
+            self.thresholds = {
+                "igpu_cpu": 0.15,    # Classifier 1 threshold
+                "gpu_cpu": 0.4,      # Classifier 2 threshold
+                "gpu_igpu": 0.67     # Classifier 3 threshold
+            }
+
         # Load feature names
-        with open(f"{model_dir}/Final Artifacts/features.txt", 'r') as f:
-            self.feature_names = json.load(f)
-        
+        try:
+            with open(f"{model_dir}/Final Artifacts/features.txt", 'r') as f:
+                self.feature_names = json.load(f)
+        except FileNotFoundError:
+            # Fallback feature names if file doesn't exist
+            self.feature_names = {
+                "c1": ["threads", "global_memory_loads", "global_memory_stores", "local_memory_loads", "local_memory_stores", "total_loops", "parallel_loops", "cast_operations", "vector_operations", "total_integer_operations"],
+                "c2": ["threads", "global_memory_loads", "global_memory_stores", "local_memory_loads", "local_memory_stores", "total_loops", "parallel_loops", "cast_operations", "vector_operations", "total_integer_operations"],
+                "c3": ["threads", "global_memory_loads", "global_memory_stores", "local_memory_loads", "local_memory_stores", "total_loops", "parallel_loops", "cast_operations", "vector_operations", "total_integer_operations"]
+            }
+
         # Define thresholds for each classifier
         self.thresholds = {
             "igpu_cpu": 0.15,    # Classifier 1 threshold
