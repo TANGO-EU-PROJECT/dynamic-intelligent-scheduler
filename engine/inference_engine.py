@@ -23,11 +23,11 @@ class TornadoVMInferenceEngine:
         self.model_dir = Path(model_dir).resolve()
         default_path = Path("./ML").resolve()
 
-        if self.model_dir == default_path:
-            subfolder = "Energy-Trained-Models" if self.mode == "energy" else "Performance-Trained-Models"
-            classifier_dir = self.model_dir / subfolder
-        else:
-            classifier_dir = self.model_dir
+        #if self.model_dir == default_path:
+        subfolder = "Energy-Trained-Models" if self.mode == "energy" else "Performance-Trained-Models"
+        classifier_dir = self.model_dir / subfolder
+        #else:
+        #    classifier_dir = self.model_dir
 
         if self.mode == "energy":
             # Load the six trained classifiers
@@ -242,6 +242,64 @@ class TornadoVMInferenceEngine:
                 predicted_device = "cpu"
             else:
                 predicted_device = max(filtered, key=filtered.get)
+
+        return {
+            "predicted_device": predicted_device,
+            "confidence_scores": {
+                "igpu_vs_cpu": prob_1,
+                "gpu_vs_cpu": prob_2,
+                "gpu_vs_igpu": prob_3
+            },
+            "classifier_decisions": {
+                "igpu_fit": igpu_fit,
+                "gpu_fit": gpu_fit,
+                "gpu_igpu_fit": gpu_igpu_fit
+            },
+            "raw_probabilities": [prob_1, prob_2, prob_3],
+            "device_code": device_code
+        }
+
+    def predict_hardware(self, features: Dict[str, float]) -> Dict[str, any]:
+        """
+        Predict optimal hardware for a computational task.
+
+        Args:
+            features: Dictionary of feature names to values
+
+        Returns:
+            Dictionary containing:
+            - predicted_device: 'cpu', 'igpu', or 'gpu'
+            - confidence_scores: Probabilities from each classifier
+            - classifier_decisions: Binary decisions from each classifier
+            - raw_probabilities: Raw probability outputs
+        """
+        # Validate input
+        self.validate_input(features)
+
+        # Convert to DataFrame with correct feature order
+        input_df = pd.DataFrame([features])[self.required_features]
+
+        # Get probability predictions from each classifier
+        prob_1 = self.classifier_1.predict_proba(input_df)[0, 1]  # iGPU vs CPU
+        prob_2 = self.classifier_2.predict_proba(input_df)[0, 1]  # GPU vs CPU
+        prob_3 = self.classifier_3.predict_proba(input_df)[0, 1]  # GPU vs iGPU
+
+        # Apply thresholds to get binary decisions
+        igpu_fit = prob_1 >= self.thresholds["igpu_cpu"]
+        gpu_fit = prob_2 >= self.thresholds["gpu_cpu"]
+        gpu_igpu_fit = prob_3 >= self.thresholds["gpu_igpu"]
+
+        # Combine decisions to determine final device
+        device_code = f"{int(igpu_fit)}{int(gpu_fit)}{int(gpu_igpu_fit)}"
+
+        # Map device codes to hardware
+        device_mapping = {
+            '000': 'cpu', '001': 'cpu',
+            '100': 'igpu', '101': 'igpu', '110': 'igpu',
+            '010': 'gpu', '011': 'gpu', '111': 'gpu'
+        }
+
+        predicted_device = device_mapping.get(device_code, 'cpu')
 
         return {
             "predicted_device": predicted_device,

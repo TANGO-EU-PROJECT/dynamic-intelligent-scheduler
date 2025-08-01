@@ -29,7 +29,7 @@ def main():
     # Load the JSON input
     print("\nLoading JSON input...")
     try:
-        json_data = load_json_file("features.json")
+        json_data = load_json_file("tests/features.json")
         print("✓ JSON loaded successfully")
         print(f"  Workload: {list(json_data.keys())[0]}")
     except Exception as e:
