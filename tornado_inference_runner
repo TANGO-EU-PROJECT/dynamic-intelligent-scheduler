@@ -15,6 +15,7 @@ import json
 import os
 import sys
 import argparse
+import warnings
 from pathlib import Path
 import re
 from typing import Dict, List, Tuple, Optional
@@ -27,6 +28,11 @@ except ImportError as e:
     print("Please ensure inference_engine.py is in the same directory.")
     sys.exit(1)
 
+warnings.filterwarnings(
+    "ignore",
+    message="X does not have valid feature names",
+    category=UserWarning
+)
 
 class TornadoFeatureExtractor:
     def __init__(self, model_dir: str = "./ML", tornado_path: str = "tornado", mode: str = "performance"):

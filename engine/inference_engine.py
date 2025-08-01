@@ -190,8 +190,6 @@ class TornadoVMInferenceEngine:
         else:
             result = self._predict_performance_mode(feature_array, features)
 
-
-
         return result
 
     def _predict_power_mode(self, feature_array: np.ndarray, features: Dict[str, float]) -> Dict[str, any]:
