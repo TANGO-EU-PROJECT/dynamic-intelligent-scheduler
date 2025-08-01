@@ -225,12 +225,12 @@ class TornadoVMInferenceEngine:
 
         # Determine if Java is better than base device
         java_better = False
-        if base_device == "cpu" and java_cpu_fit:
-            java_better = True
-        elif base_device == "gpu" and java_gpu_fit:
-            java_better = True
-        elif base_device == "igpu" and java_igpu_fit:
-            java_better = True
+        #if base_device == "cpu" and java_cpu_fit:
+        #    java_better = True
+        #elif base_device == "gpu" and java_gpu_fit:
+        #    java_better = True
+        #elif base_device == "igpu" and java_igpu_fit:
+        #    java_better = True
 
         # Final device recommendation
         predicted_device = "java" if java_better else base_device
