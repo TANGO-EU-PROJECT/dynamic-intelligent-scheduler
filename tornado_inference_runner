@@ -521,7 +521,14 @@ class TornadoFeatureExtractor:
 
         device_id_list = device_ids.get(target_device_type, [])
         if not device_id_list:
-            print(f"❌ No device ID found for predicted device type: {target_device_type}")
+            if (predicted_device == "java"):
+                print("⚡ Small input detected – Dynamic Intelligent Scheduler recommends to run on Java/Python for efficiency.")
+                self.cleanup(features_json_file)
+                sys.exit(0)
+            else:
+                print(f"❌ No device ID found for predicted device type: {target_device_type}")
+                self.cleanup(features_json_file)
+                sys.exit(1)
         else:
             device_id = device_id_list[0]  # Use first matching device ID
             if truffle_args:
