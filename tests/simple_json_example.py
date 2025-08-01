@@ -52,10 +52,6 @@ def main():
     print("\nConfidence Scores:")
     for classifier, score in result['confidence_scores'].items():
         print(f"  {classifier}: {score:.3f}")
-    
-    print("\nParsed Features:")
-    for feature, value in result['parsed_features'].items():
-        print(f"  {feature}: {value}")
 
 if __name__ == "__main__":
     main() 
